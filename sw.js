@@ -1,6 +1,6 @@
 // 오프라인에서도 앱 화면이 열리도록 기본 파일을 저장해 두는 서비스 워커
 // 앱을 수정해서 올릴 때마다 아래 버전 숫자를 올려주세요.
-const CACHE = "outfit-v4";
+const CACHE = "outfit-v7";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

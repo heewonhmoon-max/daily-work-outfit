@@ -55,9 +55,10 @@
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:22px 12px; }
   .tile .img { aspect-ratio:1; background:#f4f4f4; display:flex; align-items:center; justify-content:center; padding:14%; }
   .tile .img svg { width:100%; height:100%; }
-  .tile .img.ph { padding:0; overflow:hidden; background:#f4f4f4; }
-  .tile .img .photo { display:block; width:100%; height:100%; }
-  .tile .img img { width:100%; height:100%; object-fit:cover; display:block; mix-blend-mode:multiply; }
+  .mood { margin:0 0 26px; }
+  .mood img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:#f4f4f4; }
+  .credit { font-size:10px; color:var(--sub); margin-top:6px; }
+  .credit a { color:inherit; }
   .tile .part { font-size:11px; color:var(--sub); letter-spacing:0.1em; margin:10px 0 3px; }
   .tile .name { font-size:15px; font-weight:600; line-height:1.35; letter-spacing:-0.02em; }
 
@@ -71,6 +72,42 @@
   .btn { width:100%; padding:17px; border-radius:2px; border:none; background:var(--ink); color:#fff; font-size:14px; font-weight:700; letter-spacing:0.02em; cursor:pointer; margin-top:18px; }
   .btn:active { opacity:.85; }
   .linkbtn { background:none; border:none; color:var(--sub); font-size:11px; text-decoration:underline; cursor:pointer; }
+
+  [hidden] { display:none !important; }
+  .views { display:flex; gap:22px; padding:14px 0 0; border-bottom:1px solid var(--line); }
+  .views button { background:none; border:none; padding:6px 0 12px; font-size:14px; font-weight:700; color:#b5b5b5; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  .views button.on { color:var(--ink); border-bottom-color:var(--ink); }
+  .btn.ghost { background:#fff; color:var(--ink); border:1px solid var(--ink); margin-top:10px; }
+  .btn.small { width:auto; padding:11px 16px; font-size:13px; margin:0; }
+  .empty { padding:34px 0 8px; }
+  .sug { display:flex; gap:14px; align-items:center; margin-top:26px; padding:14px; border:1px dashed #bdbdbd; }
+  .sugimg { width:84px; height:84px; flex:none; background:#f4f4f4; padding:10px; }
+  .sugimg svg { width:100%; height:100%; }
+  .sugtag { font-size:10px; letter-spacing:0.08em; color:var(--sub); margin-bottom:4px; }
+  .sugname { font-size:15px; font-weight:700; letter-spacing:-0.02em; }
+  .sugwhy { font-size:12px; color:#666; margin-top:4px; line-height:1.5; }
+  .chead { display:flex; justify-content:space-between; align-items:flex-end; padding:26px 0 16px; }
+  .chead .eyebrow { font-size:11px; letter-spacing:0.14em; color:var(--sub); font-weight:600; }
+  .ctitle { font-size:24px; font-weight:800; letter-spacing:-0.03em; margin-top:4px; }
+  .ctitle span { font-size:14px; font-weight:500; color:var(--sub); }
+  .form { border:1px solid var(--ink); padding:18px; margin-bottom:22px; }
+  .ftitle { font-size:15px; font-weight:800; margin-bottom:12px; }
+  .form label { display:block; font-size:11px; color:var(--sub); letter-spacing:0.06em; margin-top:12px; }
+  .form input[type=text], .form select { display:block; width:100%; margin-top:6px; padding:10px 0; font-size:15px; border:none; border-bottom:1px solid #cfcfcf; border-radius:0; background:none; color:var(--text); font-family:inherit; outline:none; }
+  .form input[type=text]:focus, .form select:focus { border-bottom-color:var(--ink); }
+  .form select { background-position:calc(100% - 6px) 55%, calc(100% - 2px) 55%; }
+  .frow { display:flex; gap:16px; } .frow label { flex:1; }
+  .form label.chk { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text); letter-spacing:0; margin-top:16px; }
+  .fbtns { display:flex; gap:8px; margin-top:6px; } .fbtns .btn { margin-top:14px; }
+  #fDelete { margin-top:14px; color:#c33; }
+  .cpart { margin-top:24px; }
+  .cptitle { font-size:12px; letter-spacing:0.1em; font-weight:700; margin-bottom:10px; }
+  .cptitle span { color:var(--sub); font-weight:500; }
+  .grid.g3 { grid-template-columns:repeat(3,1fr); gap:16px 8px; }
+  .ctile { background:none; border:none; padding:0; text-align:left; cursor:pointer; font-family:inherit; color:inherit; }
+  .ctile .name { font-size:12px; font-weight:600; margin-top:6px; }
+  .ctile .meta2 { font-size:10px; color:var(--sub); margin-top:2px; }
+  .ctile .img { padding:10%; }
   .note { font-size:11px; color:var(--sub); text-align:center; margin-top:18px; line-height:1.6; }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -82,6 +119,12 @@
     <div class="date" id="date"></div>
   </div>
 
+  <div class="views" id="views">
+    <button data-view="today" class="on">오늘의 코디</button>
+    <button data-view="closet">내 옷장</button>
+  </div>
+
+<div id="viewToday">
   <div class="hero">
     <div class="eyebrow">FEELS LIKE · 출근 시간 체감온도</div>
     <div id="wIcon"></div>
@@ -115,7 +158,34 @@
 
   <button class="btn" id="another">다른 조합 보기</button>
   <div class="note"><button class="linkbtn" id="resetFb">내 취향 초기화</button></div>
-  <div class="note">사진을 누르면 상품 페이지로 이동해요.<br>상품 이미지 출처: 네이버 쇼핑 · 사진이 없는 옷은 일러스트로 보여요.</div>
+  <div class="note">옷 그림은 이해를 돕는 일러스트예요.<br>실제 옷의 모양과 색은 다를 수 있어요.<br>옷장과 취향은 이 기기에만 저장돼요.</div>
+</div>
+
+<div id="viewCloset" hidden>
+  <div class="chead">
+    <div><div class="eyebrow">MY CLOSET</div><div class="ctitle">내 옷장 <span id="cCount"></span></div></div>
+    <button class="btn small" id="addItem">+ 옷 추가</button>
+  </div>
+  <div id="formWrap" class="form" hidden>
+    <div class="ftitle" id="fTitle">옷 추가</div>
+    <label>이름<input id="fName" type="text" placeholder="예: 네이비 울 코트" maxlength="30" autocomplete="off"></label>
+    <div class="frow">
+      <label>부위<select id="fPart"></select></label>
+      <label>종류<select id="fKind"></select></label>
+    </div>
+    <div class="frow">
+      <label>색<select id="fColor"></select></label>
+      <label>두께<select id="fWarm"><option value="1">얇음</option><option value="2" selected>보통</option><option value="3">두꺼움</option></select></label>
+    </div>
+    <label class="chk"><input type="checkbox" id="fRain"> 비 오는 날 입어도 괜찮아요 (방수·젖어도 OK)</label>
+    <div class="fbtns">
+      <button class="btn" id="fSave">저장</button>
+      <button class="btn ghost" id="fCancel">취소</button>
+    </div>
+    <button class="linkbtn" id="fDelete" hidden>이 옷 삭제</button>
+  </div>
+  <div id="closetList"></div>
+</div>
 </div>
 
 <script>
@@ -246,6 +316,12 @@ const KINDS = [
 const DEFAULT_FILL = { padding:"#3b3f46", coat:"#8c8173", jacket:"#6b7078", dress:"#2f3340", skirt:"#4a4a4f", pants:"#43474e",
   boot:"#2b2320", shoe:"#3a2c25", umbrella:"#1f2a4a", turtle:"#cbbfae", knit:"#cbbfae", shirt:"#f2f2f2", tee:"#e8e4dc" };
 
+// 이름 속 첫 번째 색 이름 (없으면 빈 문자열)
+function colorName(name) {
+  let best = "", pos = 999;
+  for (const c in COLORS) { const i = name.indexOf(c); if (i >= 0 && i < pos) { pos = i; best = c; } }
+  return best;
+}
 function kindOf(name) { const k = KINDS.find(([, re]) => re.test(name)); return k ? k[0] : "tee"; }
 function colorOf(name, kind) {
   let best = null, pos = 999;
@@ -257,8 +333,8 @@ function isDark(hex) {
   return (0.299 * r + 0.587 * g + 0.114 * b) < 120;
 }
 
-function garmentSVG(name) {
-  const kind = kindOf(name), fill = colorOf(name, kind), short = /반팔/.test(name);
+function garmentSVG(name, opts = {}) {
+  const kind = opts.kind || kindOf(name), fill = opts.color || colorOf(name, kind), short = /반팔/.test(name);
   const line = isDark(fill) ? "rgba(255,255,255,.45)" : "rgba(0,0,0,.35)";
   const body = {
     teeS: "M30 20 L40 16 Q50 24 60 16 L70 20 L88 34 L79 46 L70 40 L70 84 L30 84 L30 40 L21 46 L12 34 Z",
@@ -291,25 +367,68 @@ function garmentSVG(name) {
     case "shirt": g = P(short ? body.teeS : body.longS) + P("M40 14 L50 30 L38 26 Z") + P("M60 14 L50 30 L62 26 Z") + L("M50 30 V86"); break;
     default: g = P(body.teeS);
   }
-  return `<svg viewBox="0 0 100 100" role="img" aria-label="${name}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${String(name).replace(/"/g, "&quot;")}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
 }
 
-// ===== 3. 화면 =====
-let gender = "m", setIndex = 0, order = null;
-let IMAGES = {}; // images.json: 옷 이름별 실제 상품 사진 (없으면 일러스트로 대신 보여줘요)
-fetch("images.json").then(r => r.ok ? r.json() : {}).then(d => { IMAGES = d; render(); }).catch(() => {});
+// ===== 3. 상태와 저장 (이 브라우저 안에 저장돼요) =====
+let gender = "m", setIndex = 0, order = null, view = "today";
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const todayStr = () => new Date().toLocaleDateString("sv"); // 2026-10-08 형태 (내 기기 날짜 기준)
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+let feedback = store.get("outfitFeedback2", {}); // 코디별 좋아요(1)/싫어요(-1)
+let closet = store.get("outfitCloset", []);       // 내 옷 목록
+const saveCloset = () => { store.set("outfitCloset", closet); order = null; };
+const saveFeedback = () => store.set("outfitFeedback2", feedback);
 
-// ===== 취향 저장 (이 브라우저 안에 저장돼요) =====
-const FB_STORE = "outfitFeedback";
-function loadFb() { try { return JSON.parse(localStorage.getItem(FB_STORE)) || {}; } catch (e) { return {}; } }
-function saveFb(data) { try { localStorage.setItem(FB_STORE, JSON.stringify(data)); } catch (e) {} }
-let feedback = loadFb();
-const fbKey = (band, i) => gender + "-" + band.min + "-" + i;
-const getFb = key => feedback[key] || 0;
-function setFb(key, v) {
-  if (feedback[key] === v) delete feedback[key]; else feedback[key] = v; // 같은 버튼 다시 누르면 취소
-  saveFb(feedback);
+// ===== 옷장 데이터 규칙 =====
+const PARTS = ["아우터", "상의", "하의", "신발", "원피스"];
+const PART_KINDS = {
+  "아우터": [["jacket","재킷·블레이저"], ["coat","코트"], ["padding","패딩"], ["knit","가디건"]],
+  "상의":   [["shirt","셔츠·블라우스"], ["tee","티셔츠"], ["knit","니트"], ["turtle","터틀넥"]],
+  "하의":   [["pants","바지"], ["skirt","스커트"]],
+  "신발":   [["shoe","구두·로퍼·스니커즈"], ["boot","부츠"]],
+  "원피스": [["dress","원피스"]],
+};
+const WARM_LABEL = ["", "얇음", "보통", "두꺼움"];
+const BASE_WARMTH = { padding:3, coat:3, jacket:2, knit:2, turtle:2, shirt:1, tee:1, pants:2, skirt:2, dress:2, shoe:2, boot:3 };
+
+const detectKind = name => { const k = KINDS.find(([, re]) => re.test(name)); return k ? k[0] : null; };
+function partForKind(kind, name) {
+  if (["padding", "coat", "jacket"].includes(kind)) return "아우터";
+  if (kind === "knit" && /가디건/.test(name)) return "아우터";
+  if (["shirt", "tee", "turtle", "knit"].includes(kind)) return "상의";
+  if (["pants", "skirt"].includes(kind)) return "하의";
+  if (["shoe", "boot"].includes(kind)) return "신발";
+  if (kind === "dress") return "원피스";
+  return null;
+}
+function guessWarmth(kind, part, name) {
+  let w = (part === "아우터" && kind === "knit") ? 1 : (BASE_WARMTH[kind] || 2);
+  if (/얇은|린넨|쿨|반팔|시어/.test(name)) w -= 1;
+  if (/두꺼운|기모|울|캐시미어|히트텍|퀼팅/.test(name)) w += 1;
+  return Math.min(3, Math.max(1, w));
+}
+const hexOf = item => (item.color && COLORS[item.color]) || null;
+const itemArt = item => garmentSVG(item.name, { kind: item.kind, color: hexOf(item) });
+const colorOfItem = item => item.color || colorName(item.name);
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+const SAMPLE = [
+  ["아우터","coat","네이비","네이비 울 코트",3,false], ["아우터","coat","베이지","베이지 트렌치코트",2,true],
+  ["아우터","jacket","블랙","블랙 블레이저",2,false], ["아우터","knit","그레이","그레이 가디건",1,false],
+  ["상의","shirt","화이트","화이트 옥스포드 셔츠",1,false], ["상의","shirt","스카이블루","스카이블루 셔츠",1,false],
+  ["상의","knit","그레이","그레이 니트",2,false], ["상의","turtle","블랙","블랙 터틀넥",2,false],
+  ["상의","tee","화이트","화이트 반팔 티셔츠",1,false],
+  ["하의","pants","블랙","블랙 슬랙스",2,false], ["하의","pants","베이지","베이지 치노 팬츠",2,false], ["하의","pants","네이비","네이비 슬랙스",2,false],
+  ["신발","shoe","브라운","브라운 로퍼",2,false], ["신발","shoe","블랙","블랙 더비 슈즈",2,false], ["신발","boot","블랙","블랙 첼시 부츠",3,true],
+];
+function loadSample() {
+  closet = SAMPLE.map(([part, kind, color, name, warmth, rain]) => ({ id: newId(), part, kind, color, name, warmth, rain }));
+  saveCloset(); setIndex = 0; renderAll();
 }
 
 // ===== 실제 날씨 (Open-Meteo: 무료, API 키 필요 없음) =====
@@ -357,28 +476,106 @@ $("locate").addEventListener("click", () => {
     () => { $("status").textContent = "위치 권한이 없어서 지역 선택을 이용해 주세요."; });
 });
 
-function weatherIcon(t, rain) {
-  if (rain) return "🌧️";
-  if (t >= 28) return "☀️"; if (t >= 20) return "🌤️"; if (t >= 10) return "⛅"; if (t >= 0) return "🌥️"; return "❄️";
+// ===== 4. 오늘의 코디 고르기 (내 옷장 안에서) =====
+const NEUTRAL = ["화이트", "아이보리", "크림", "베이지", "카멜", "브라운", "그레이", "차콜", "블랙", "네이비"];
+const DARKISH = ["블랙", "네이비", "그레이", "차콜"];
+const pool = part => closet.filter(i => i.part === part);
+
+// 기온에 따라 필요한 두께 (1 얇음 · 2 보통 · 3 두꺼움, 아우터 0은 필요 없음)
+function needFor(t, range) {
+  let n;
+  if (t >= 28) n = { outer:0, top:1, bottom:1 };
+  else if (t >= 23) n = { outer:0, top:1, bottom:1 };
+  else if (t >= 20) n = { outer:1, top:1, bottom:1 };
+  else if (t >= 17) n = { outer:1, top:2, bottom:2 };
+  else if (t >= 9)  n = { outer:2, top:2, bottom:2 };
+  else if (t >= 5)  n = { outer:3, top:2, bottom:3 };
+  else              n = { outer:3, top:3, bottom:3 };
+  if (n.outer === 0 && t < 28 && range >= 10) n.outer = 1; // 일교차 크면 얇은 겉옷
+  return n;
+}
+function hash(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
+function recentlyWorn(item) {
+  const base = Date.parse(todayStr());
+  return (item.worn || []).some(d => { const n = Math.round((base - Date.parse(d)) / 864e5); return n >= 1 && n <= 2; });
+}
+const comboItems = c => [c.outer, c.top, c.bottom, c.shoe].filter(Boolean);
+const comboKey = c => "c:" + comboItems(c).map(i => i.id).sort().join("+");
+
+function buildCombos(t, rain, range) {
+  const need = needFor(t, range);
+  const O = [null, ...pool("아우터")];
+  const T = [...pool("상의"), ...pool("원피스")], B = pool("하의"), S = pool("신발");
+  const Tn = T.length ? T : [null], Bn = B.length ? B : [null], Sn = S.length ? S : [null];
+  const today = todayStr(), res = [];
+  for (const o of O) for (const tp of Tn) for (const b of (tp && tp.part === "원피스" ? [null] : Bn)) for (const s of Sn) {
+    let sc = 0;
+    // 두께가 날씨에 맞는지
+    sc -= o ? Math.abs(o.warmth - need.outer) * 3 : (need.outer ? need.outer * 3 + 1 : 0);
+    sc -= tp ? Math.abs(tp.warmth - need.top) * 2 + (tp.part === "원피스" ? 1 : 0) : need.top * 2 + 1;
+    sc -= b ? Math.abs(b.warmth - need.bottom) * 2 : (tp && tp.part === "원피스" ? 0 : need.bottom * 2 + 1);
+    // 비 오는 날은 방수되는 신발·아우터
+    if (rain) { if (s) sc += s.rain ? 4 : -4; if (o && o.rain) sc += 1.5; }
+    // 계절에 맞는 신발
+    if (s && s.kind === "boot") sc += t < 10 ? 1.5 : (t >= 23 ? -2 : 0);
+    // 색 조합
+    const cols = [o, tp, b].filter(Boolean).map(colorOfItem).filter(Boolean);
+    const vivid = cols.filter(c => !NEUTRAL.includes(c)).length;
+    if (vivid > 1) sc -= 2.5; else if (vivid === 0 && cols.length) sc += 1;
+    if (tp && b && colorOfItem(tp) && colorOfItem(tp) === colorOfItem(b) && !DARKISH.includes(colorOfItem(tp))) sc -= 2;
+    if (s && s.color === "브라운" && b && colorOfItem(b) === "블랙") sc -= 1;
+    // 최근 입은 옷은 피하기
+    for (const i of [o, tp, b, s]) if (i && recentlyWorn(i)) sc -= 3;
+    const c = { outer: o, top: tp, bottom: b, shoe: s };
+    const key = comboKey(c);
+    sc += feedback[key] === 1 ? 5 : feedback[key] === -1 ? -8 : 0;
+    sc += (hash(today + key) % 100) / 110; // 같은 점수면 날마다 조금씩 다르게
+    c.sc = sc; c.key = key; res.push(c);
+  }
+  res.sort((a, b) => b.sc - a.sc);
+  // 서로 너무 비슷한 조합은 건너뛰고 다양하게
+  const shared = (a, b) => comboItems(a).filter(i => comboItems(b).includes(i)).length;
+  const picked = [];
+  for (const c of res) { if (picked.length >= 6) break; if (picked.every(p => shared(p, c) <= 2)) picked.push(c); }
+  for (const c of res) { if (picked.length >= Math.min(6, res.length)) break; if (!picked.includes(c)) picked.push(c); }
+  return { list: picked, need };
 }
 
+// 옷장에 없지만 있으면 좋은 아이템 1개
+function suggestion(combo, band, need, t, rain, range) {
+  const set = band.sets[(hash(todayStr()) + setIndex) % band.sets.length][gender];
+  const mk = (part, name, why) => ({ part, name, why });
+  if (rain && !(combo.shoe && combo.shoe.rain)) return mk("신발", "방수 로퍼 / 레인 부츠", "비 예보예요. 젖어도 괜찮은 신발이 있으면 마음이 편해요");
+  for (const part of ["상의", "하의", "신발"]) {
+    const hasDress = part !== "신발" && pool("원피스").length;
+    if (!pool(part).length && !hasDress && set[part]) return mk(part, set[part], `옷장에 ${part}가 없어요. 이런 ${part}는 어때요?`);
+  }
+  if (need.outer >= 2 && set["아우터"] && (!combo.outer || Math.abs(combo.outer.warmth - need.outer) >= 2))
+    return mk("아우터", set["아우터"], `${t}°엔 이런 아우터가 있으면 든든해요`);
+  if (need.outer === 1 && range >= 10 && !pool("아우터").some(i => i.warmth <= 1))
+    return mk("아우터", "얇은 가디건", `일교차가 ${range}°예요. 걸치기 좋은 얇은 겉옷이 있으면 좋아요`);
+  if (combo.top && combo.top.part !== "원피스" && Math.abs(combo.top.warmth - need.top) >= 2 && set["상의"])
+    return mk("상의", set["상의"], "오늘 날씨에 더 잘 맞는 상의예요");
+  if (combo.bottom && Math.abs(combo.bottom.warmth - need.bottom) >= 2 && set["하의"])
+    return mk("하의", set["하의"], "오늘 날씨에 더 잘 맞는 하의예요");
+  for (const part of ["아우터", "신발", "상의", "하의"]) {
+    const name = set[part]; if (!name) continue;
+    if (!closet.some(i => i.kind === kindOf(name))) return mk(part, name, "옷장에 없는 종류예요. 하나쯤 있으면 코디 폭이 넓어져요");
+  }
+  // 다 가지고 있다면: 오늘 날씨에 어울리는 다른 스타일 제안
+  const opts = ["아우터", "상의", "하의"].filter(p => set[p]);
+  const part = opts.length ? opts[(hash(todayStr()) + setIndex) % opts.length] : "신발";
+  return mk(part, set[part], "이런 스타일은 어때요? 옷장에 하나 더하면 코디가 다채로워져요");
+}
+
+// ===== 5. 오늘 화면 =====
+const tileHtml = item => `<div class="tile"><div class="img">${itemArt(item)}</div><div class="part">${item.part}</div><div class="name">${esc(item.name)}</div></div>`;
 
 function render() {
   const t = weather.temp, rain = weather.rain;
+  const range = weather.min !== null ? weather.max - weather.min : 0;
   const band = OUTFITS.find(b => t >= b.min);
-  // 추천 순서: 좋아요 → 아직 평가 안 함 → 싫어요 (순서는 조합을 바꾸기 전까지 고정)
-  if (!order || order.bandMin !== band.min) {
-    const idx = band.sets.map((_, i) => i);
-    const score = i => getFb(fbKey(band, i));
-    idx.sort((a, b) => score(b) - score(a) || a - b);
-    order = { bandMin: band.min, idx };
-  }
-  const cur = order.idx[setIndex % order.idx.length];
-  const curKey = fbKey(band, cur);
-  const fb = getFb(curKey);
-  const set = band.sets[cur][gender];
 
-  $("wIcon").textContent = weatherIcon(t, rain);
   $("wTemp").textContent = t + "°";
   let desc = band.label + (rain ? " · 비 예보" : "");
   if (weather.min !== null) {
@@ -386,60 +583,168 @@ function render() {
     if (weather.pop !== null) desc += " · 강수확률 " + weather.pop + "%";
   }
   $("wDesc").textContent = desc;
-  $("tip2").textContent = (weather.min !== null && weather.max - weather.min >= 10)
-    ? "일교차가 " + (weather.max - weather.min) + "°예요. 벗고 입기 편한 겉옷을 챙기세요." : "";
+  $("tip2").textContent = range >= 10 ? "일교차가 " + range + "°예요. 벗고 입기 편한 겉옷을 챙기세요." : "";
+  $("another").hidden = !closet.length;
 
-  const items = Object.entries(set).filter(([, name]) => name).map(([part, name]) => ({ part, name }));
-  if (rain) {
-    items.push({ part: "신발(비 오는 날)", name: "방수 로퍼 / 레인 부츠" });
-    items.push({ part: "소품", name: "장우산" });
+  if (!closet.length) {
+    $("outfit").innerHTML = `<div class="empty">
+      <p class="headline">옷장을 먼저<br>채워볼까요?</p>
+      <p class="tip">내가 가진 옷으로 오늘 날씨에 맞는 코디를 골라 드려요.</p>
+      <button class="btn" data-act="goCloset">내 옷 추가하기</button>
+      <button class="btn ghost" data-act="sample">샘플 옷장으로 먼저 써보기</button></div>`;
+    return;
   }
 
+  if (!order) order = buildCombos(t, rain, range);
+  const combo = order.list[setIndex % order.list.length];
+  const fb = feedback[combo.key] || 0;
+  const sug = suggestion(combo, band, order.need, t, rain, range);
+  const worn = comboItems(combo).every(i => (i.worn || []).includes(todayStr()));
+
   $("outfit").innerHTML =
-    `<p class="headline">${band.label},<br>이렇게 입어요</p>
-     <p class="tip">${band.tip}${rain ? " · 비 오니 젖어도 되는 신발로!" : ""}</p>` +
-    `<div class="grid">` + items.map(it => {
-      const p = IMAGES[gender + "|" + it.name];
-      const art = p
-        ? `<a class="photo" href="${p.link}" target="_blank" rel="noopener" title="${p.title}"><img src="${p.img}" alt="${it.name}" loading="lazy" referrerpolicy="no-referrer" data-name="${it.name}"></a>`
-        : garmentSVG(it.name);
-      return `<div class="tile"><div class="img${p ? " ph" : ""}">${art}</div><div class="part">${it.part}</div><div class="name">${it.name}</div></div>`;
-    }    ).join("") + `</div>` +
-    `<div class="fb">
+    `<p class="headline">${band.label},<br>오늘은 이렇게 입어요</p>
+     <p class="tip">${band.tip}${rain ? " · 비 오니 젖어도 되는 신발로!" : ""}</p>
+     <div class="grid">${comboItems(combo).map(tileHtml).join("")}</div>
+     <div class="sug">
+       <div class="sugimg">${garmentSVG(sug.name)}</div>
+       <div class="sugtxt"><div class="sugtag">있으면 좋은 아이템 · ${sug.part}</div>
+         <div class="sugname">${esc(sug.name)}</div><div class="sugwhy">${esc(sug.why)}</div></div>
+     </div>
+     <div class="fb">
        <button data-fb="1" class="${fb === 1 ? "on" : ""}">👍 마음에 들어요</button>
        <button data-fb="-1" class="${fb === -1 ? "on bad" : ""}">👎 별로예요</button>
-     </div>` +
-    (fb === 1 ? `<p class="fbmsg">좋아요! 비슷한 날엔 이 조합을 먼저 보여드릴게요.</p>` : "");
+     </div>
+     <button class="btn ghost" data-worn="1">${worn ? "✓ 오늘 입은 옷으로 기록됨 (누르면 취소)" : "오늘 이걸로 입을게요"}</button>` +
+    (fb === 1 ? `<p class="fbmsg">좋아요! 비슷한 날엔 이 조합을 먼저 보여드릴게요.</p>` : "") +
+    (worn ? `<p class="fbmsg">기록했어요. 내일은 다른 옷을 먼저 추천할게요.</p>` : "");
 }
+
+// ===== 6. 내 옷장 화면 =====
+function renderCloset() {
+  $("cCount").textContent = closet.length ? `(${closet.length})` : "";
+  if (!closet.length) {
+    $("closetList").innerHTML = `<div class="empty"><p class="tip">아직 등록한 옷이 없어요.<br>위의 <b>+ 옷 추가</b>로 한 벌씩 등록하거나, 샘플로 먼저 둘러볼 수 있어요.</p>
+      <button class="btn ghost" data-act="sample">샘플 옷장 불러오기</button></div>`;
+    return;
+  }
+  $("closetList").innerHTML = PARTS.map(part => {
+    const items = pool(part); if (!items.length) return "";
+    return `<div class="cpart"><div class="cptitle">${part} <span>${items.length}</span></div><div class="grid g3">` +
+      items.map(i => `<button class="tile ctile" data-edit="${i.id}"><div class="img">${itemArt(i)}</div>
+        <div class="name">${esc(i.name)}</div><div class="meta2">${WARM_LABEL[i.warmth]}${i.rain ? " · 비 OK" : ""}</div></button>`).join("") +
+      `</div></div>`;
+  }).join("");
+}
+
+// 옷 추가·수정 폼
+let editingId = null;
+const touched = {}; // 사용자가 직접 바꾼 칸은 자동 입력으로 덮어쓰지 않아요
+function fillKinds(part, keep) {
+  $("fKind").innerHTML = PART_KINDS[part].map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+  if (keep && PART_KINDS[part].some(([v]) => v === keep)) $("fKind").value = keep;
+}
+$("fPart").innerHTML = PARTS.map(p => `<option>${p}</option>`).join("");
+$("fColor").innerHTML = `<option value="">(자동 · 이름에서 찾기)</option>` + Object.keys(COLORS).map(c => `<option>${c}</option>`).join("");
+function openForm(item) {
+  editingId = item ? item.id : null;
+  Object.assign(touched, { part: !!item, kind: !!item, color: !!item, warm: !!item });
+  $("fTitle").textContent = item ? "옷 수정" : "옷 추가";
+  $("fName").value = item ? item.name : "";
+  $("fPart").value = item ? item.part : "상의";
+  fillKinds($("fPart").value, item && item.kind);
+  $("fColor").value = item ? (item.color || "") : "";
+  $("fWarm").value = item ? item.warmth : 2;
+  $("fRain").checked = !!(item && item.rain);
+  $("fDelete").hidden = !item;
+  $("formWrap").hidden = false;
+  $("fName").focus();
+}
+function closeForm() { $("formWrap").hidden = true; editingId = null; }
+
+$("fName").addEventListener("input", () => {
+  const name = $("fName").value, kind = detectKind(name);
+  if (kind) {
+    const part = partForKind(kind, name);
+    if (!touched.part && part) { $("fPart").value = part; fillKinds(part); }
+    if (!touched.kind && PART_KINDS[$("fPart").value].some(([v]) => v === kind)) $("fKind").value = kind;
+  }
+  const c = colorName(name);
+  if (!touched.color && c) $("fColor").value = c;
+  if (!touched.warm) $("fWarm").value = guessWarmth($("fKind").value, $("fPart").value, name);
+});
+$("fPart").addEventListener("change", () => { touched.part = true; fillKinds($("fPart").value); });
+$("fKind").addEventListener("change", () => { touched.kind = true; });
+$("fColor").addEventListener("change", () => { touched.color = true; });
+$("fWarm").addEventListener("change", () => { touched.warm = true; });
+$("fCancel").addEventListener("click", closeForm);
+$("addItem").addEventListener("click", () => openForm(null));
+$("fSave").addEventListener("click", () => {
+  const name = $("fName").value.trim();
+  if (!name) { $("fName").focus(); return; }
+  const data = { name, part: $("fPart").value, kind: $("fKind").value, color: $("fColor").value,
+    warmth: Number($("fWarm").value), rain: $("fRain").checked };
+  if (editingId) closet = closet.map(i => i.id === editingId ? { ...i, ...data } : i);
+  else closet.push({ id: newId(), ...data });
+  saveCloset(); closeForm(); renderCloset();
+});
+$("fDelete").addEventListener("click", () => {
+  if (!confirm("이 옷을 옷장에서 삭제할까요?")) return;
+  closet = closet.filter(i => i.id !== editingId);
+  saveCloset(); closeForm(); renderCloset();
+});
+$("closetList").addEventListener("click", e => {
+  const edit = e.target.closest("[data-edit]");
+  if (edit) { openForm(closet.find(i => i.id === edit.dataset.edit)); $("formWrap").scrollIntoView({ block: "start", behavior: "smooth" }); return; }
+  if (e.target.dataset.act === "sample") loadSample();
+});
+
+// ===== 7. 화면 전환과 버튼들 =====
+function renderAll() { view === "closet" ? renderCloset() : render(); }
+function setView(v) {
+  view = v;
+  $("viewToday").hidden = v !== "today"; $("viewCloset").hidden = v !== "closet";
+  document.querySelectorAll("#views button").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  renderAll(); window.scrollTo(0, 0);
+}
+$("views").addEventListener("click", e => { if (e.target.dataset.view) setView(e.target.dataset.view); });
 
 $("date").textContent = new Date().toLocaleDateString("ko-KR", { month:"long", day:"numeric", weekday:"long" });
 $("temp").addEventListener("input", () => { weather.temp = Number($("temp").value); setIndex = 0; order = null; render(); });
-$("rain").addEventListener("change", () => { weather.rain = $("rain").checked; render(); });
+$("rain").addEventListener("change", () => { weather.rain = $("rain").checked; order = null; render(); });
 $("another").addEventListener("click", () => { setIndex++; render(); });
-$("outfit").addEventListener("error", e => {
-  const img = e.target;
-  if (img.tagName !== "IMG") return;
-  const box = img.closest(".img");
-  box.classList.remove("ph"); box.innerHTML = garmentSVG(img.dataset.name);
-}, true);
-$("outfit").addEventListener("click", e => {
-  const v = e.target.dataset.fb;
-  if (!v) return;
-  const band = OUTFITS.find(b => weather.temp >= b.min);
-  setFb(fbKey(band, order.idx[setIndex % order.idx.length]), Number(v));
-  if (v === "-1") setIndex++; // 싫어요 → 바로 다음 조합
-  render();
-});
-$("resetFb").addEventListener("click", () => {
-  if (!confirm("지금까지의 좋아요/싫어요를 모두 지울까요?")) return;
-  feedback = {}; saveFb(feedback); order = null; setIndex = 0; render();
-});
 $("gender").addEventListener("click", e => {
   if (!e.target.dataset.v) return;
-  gender = e.target.dataset.v; order = null; setIndex = 0;
+  gender = e.target.dataset.v; setIndex = 0;
   document.querySelectorAll("#gender button").forEach(b => b.classList.toggle("on", b === e.target));
   render();
 });
+$("outfit").addEventListener("click", e => {
+  const act = e.target.dataset.act;
+  if (act === "goCloset") { setView("closet"); openForm(null); return; }
+  if (act === "sample") { loadSample(); return; }
+  if (!order) return;
+  const combo = order.list[setIndex % order.list.length];
+  if (e.target.dataset.fb) {
+    const v = Number(e.target.dataset.fb);
+    if (feedback[combo.key] === v) delete feedback[combo.key]; else feedback[combo.key] = v;
+    saveFeedback();
+    if (v === -1 && feedback[combo.key] === -1) setIndex++; // 싫어요 → 바로 다음 조합
+    render();
+  } else if (e.target.dataset.worn) {
+    const today = todayStr(), items = comboItems(combo), already = items.every(i => (i.worn || []).includes(today));
+    for (const i of items) {
+      const w = (i.worn || []).filter(d => d !== today);
+      i.worn = already ? w : [...w, today].slice(-7);
+    }
+    store.set("outfitCloset", closet); // 기록만 바꾸고 추천 순서는 그대로 둬요
+    render();
+  }
+});
+$("resetFb").addEventListener("click", () => {
+  if (!confirm("지금까지의 좋아요/싫어요를 모두 지울까요?")) return;
+  feedback = {}; saveFeedback(); order = null; setIndex = 0; render();
+});
+
 render();
 loadCity(); // 처음 열면 서울 날씨부터 불러오기
 
