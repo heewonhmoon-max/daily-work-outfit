@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>오늘의 출근룩</title>
+<meta name="theme-color" content="#2b4acb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="출근룩">
 <style>
   :root { --bg:#f5f5f3; --card:#fff; --text:#1c1c1c; --sub:#777; --accent:#2b4acb; --line:#e5e5e2; }
   * { box-sizing:border-box; }
@@ -339,6 +346,11 @@ $("gender").addEventListener("click", e => {
 });
 render();
 loadCity(); // 처음 열면 서울 날씨부터 불러오기
+
+// 앱으로 설치 가능하게 (웹 주소로 열었을 때만 동작)
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 </script>
 </body>
 </html>
