@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>오늘의 출근룩</title>
-<meta name="theme-color" content="#2b4acb">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -12,82 +12,112 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="출근룩">
 <style>
-  :root { --bg:#f5f5f3; --card:#fff; --text:#1c1c1c; --sub:#777; --accent:#2b4acb; --line:#e5e5e2; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,"Malgun Gothic",sans-serif; }
-  .wrap { max-width:480px; margin:0 auto; padding:20px 16px 48px; }
-  h1 { font-size:20px; margin:0 0 4px; }
-  .date { color:var(--sub); font-size:14px; margin-bottom:16px; }
-  .card { background:var(--card); border-radius:16px; padding:18px; margin-bottom:14px; border:1px solid var(--line); }
-  .weather { display:flex; align-items:center; gap:14px; }
-  .weather .icon { font-size:44px; }
-  .weather .temp { font-size:32px; font-weight:700; }
-  .weather .desc { color:var(--sub); font-size:14px; }
-  .controls label { display:block; font-size:13px; color:var(--sub); margin:10px 0 4px; }
-  input[type=range] { width:100%; }
-  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .seg button { border:1px solid var(--line); background:#fff; padding:8px 14px; border-radius:20px; font-size:14px; cursor:pointer; }
-  .seg button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .headline { font-size:17px; font-weight:700; margin:0 0 4px; }
-  .tip { color:var(--sub); font-size:14px; margin:0 0 14px; }
-  .item { padding:12px 0; border-top:1px solid var(--line); }
-  .item:first-of-type { border-top:none; }
-  .item .part { font-size:12px; color:var(--sub); }
-  .item .name { font-size:16px; font-weight:600; margin:2px 0 8px; }
-  .links a { display:inline-block; font-size:13px; text-decoration:none; color:var(--accent); border:1px solid var(--accent); padding:5px 10px; border-radius:14px; margin-right:6px; }
-  .btn { width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:15px; cursor:pointer; }
-  .fb { display:flex; gap:8px; margin-top:14px; }
-  .fb button { flex:1; padding:10px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:14px; cursor:pointer; }
-  .fb button.on { background:#eaf0ff; border-color:var(--accent); color:var(--accent); font-weight:600; }
-  .fb button.on.bad { background:#fdecec; border-color:#d33; color:#d33; }
-  .fbmsg { font-size:13px; color:var(--accent); margin:10px 0 0; }
-  .linkbtn { background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline; cursor:pointer; }
-  .note { font-size:12px; color:var(--sub); text-align:center; margin-top:18px; }
+  :root { --bg:#fff; --text:#111; --sub:#8a8a8a; --line:#e9e9e9; --ink:#111; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    -webkit-font-smoothing:antialiased; letter-spacing:-0.01em; }
+  .wrap { max-width:480px; margin:0 auto; padding:0 20px 56px; }
+  button, select { font-family:inherit; color:inherit; }
+
+  /* 상단 바 */
+  .top { display:flex; justify-content:space-between; align-items:baseline; padding:20px 0 14px; border-bottom:1px solid var(--ink); }
+  .brand { font-size:13px; font-weight:800; letter-spacing:0.14em; }
+  .date { font-size:12px; color:var(--sub); }
+
+  /* 날씨 */
+  .hero { padding:28px 0 22px; }
+  .hero .eyebrow { font-size:11px; letter-spacing:0.14em; color:var(--sub); font-weight:600; }
+  .hero .temp { font-size:96px; line-height:1; font-weight:200; letter-spacing:-0.06em; margin:6px 0 10px -4px; }
+  .hero .desc { font-size:13px; color:#555; line-height:1.6; }
+  #wIcon { display:none; }
+
+  /* 설정 줄 */
+  .bar { display:flex; align-items:center; gap:18px; padding:12px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .tabs { display:flex; gap:16px; }
+  .tabs button { background:none; border:none; padding:2px 0; font-size:13px; font-weight:700; letter-spacing:0.08em; color:#bbb; cursor:pointer; border-bottom:2px solid transparent; }
+  .tabs button.on { color:var(--ink); border-bottom-color:var(--ink); }
+  .bar .sp { flex:1; }
+  select { appearance:none; -webkit-appearance:none; background:none; border:none; font-size:13px; font-weight:500; padding:2px 14px 2px 0; cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,#111 50%),linear-gradient(135deg,#111 50%,transparent 50%);
+    background-position:calc(100% - 6px) 55%, calc(100% - 2px) 55%; background-size:4px 4px; background-repeat:no-repeat; }
+  .iconbtn { background:none; border:none; font-size:13px; font-weight:500; cursor:pointer; padding:2px 0; text-decoration:underline; text-underline-offset:3px; }
+  .meta { font-size:11px; color:var(--sub); padding:10px 0 0; min-height:22px; }
+  details.test { margin-top:6px; }
+  details.test summary { font-size:11px; color:var(--sub); cursor:pointer; }
+  details.test label { display:block; font-size:12px; color:var(--sub); margin:10px 0 4px; }
+  input[type=range] { width:100%; accent-color:#111; }
+
+  /* 코디 */
+  #outfit { padding:34px 0 8px; }
+  .headline { font-size:24px; line-height:1.3; font-weight:800; margin:0 0 6px; letter-spacing:-0.03em; }
+  .tip { color:#666; font-size:14px; margin:0 0 26px; line-height:1.5; }
+  .item { display:flex; gap:16px; padding:18px 0; border-top:1px solid var(--line); }
+  .item:last-of-type { border-bottom:1px solid var(--line); }
+  .item .no { font-size:11px; font-weight:600; color:var(--sub); width:18px; padding-top:4px; letter-spacing:0.04em; }
+  .item .body { flex:1; }
+  .item .part { font-size:11px; color:var(--sub); letter-spacing:0.1em; margin-bottom:4px; }
+  .item .name { font-size:18px; font-weight:600; line-height:1.35; letter-spacing:-0.02em; display:flex; align-items:center; gap:8px; }
+  .sw { width:12px; height:12px; border-radius:50%; border:1px solid rgba(0,0,0,.18); flex:none; }
+  .links { margin-top:10px; display:flex; gap:16px; }
+  .links a { font-size:12px; color:var(--ink); text-decoration:underline; text-underline-offset:3px; text-decoration-color:#bbb; }
+  .links a:active { text-decoration-color:var(--ink); }
+
+  /* 피드백 / 버튼 */
+  .fb { display:flex; gap:8px; margin-top:22px; }
+  .fb button { flex:1; padding:13px 0; border-radius:2px; border:1px solid var(--ink); background:#fff; font-size:13px; font-weight:600; cursor:pointer; }
+  .fb button.on { background:var(--ink); color:#fff; }
+  .fbmsg { font-size:12px; color:#555; margin:12px 0 0; }
+  #tip2 { font-size:12px; color:#555; background:#f6f6f6; padding:12px 14px; margin-top:18px; line-height:1.5; }
+  #tip2:empty { display:none; }
+  .btn { width:100%; padding:17px; border-radius:2px; border:none; background:var(--ink); color:#fff; font-size:14px; font-weight:700; letter-spacing:0.02em; cursor:pointer; margin-top:18px; }
+  .btn:active { opacity:.85; }
+  .linkbtn { background:none; border:none; color:var(--sub); font-size:11px; text-decoration:underline; cursor:pointer; }
+  .note { font-size:11px; color:var(--sub); text-align:center; margin-top:18px; line-height:1.6; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 </head>
 <body>
 <div class="wrap">
-  <h1>오늘의 출근룩</h1>
-  <div class="date" id="date"></div>
-
-  <div class="card weather">
-    <div class="icon" id="wIcon"></div>
-    <div>
-      <div class="temp" id="wTemp"></div>
-      <div class="desc" id="wDesc"></div>
-    </div>
+  <div class="top">
+    <div class="brand">TODAY'S LOOK</div>
+    <div class="date" id="date"></div>
   </div>
 
-  <div class="card controls">
-    <div class="row seg" id="gender">
-      <button data-v="m" class="on">남성</button>
-      <button data-v="w">여성</button>
+  <div class="hero">
+    <div class="eyebrow">FEELS LIKE · 출근 시간 체감온도</div>
+    <div id="wIcon"></div>
+    <div class="temp" id="wTemp"></div>
+    <div class="desc" id="wDesc"></div>
+  </div>
+
+  <div class="bar">
+    <div class="tabs" id="gender">
+      <button data-v="m" class="on">MEN</button>
+      <button data-v="w">WOMEN</button>
     </div>
-    <label>지역</label>
-    <div class="row">
-      <select id="city"></select>
-      <button class="btn" id="locate" style="width:auto;padding:8px 14px">📍 내 위치</button>
-    </div>
-    <label>출근 시간</label>
-    <select id="hour">
+    <div class="sp"></div>
+    <select id="city" aria-label="지역"></select>
+    <select id="hour" aria-label="출근 시간">
       <option value="7">7시</option><option value="8" selected>8시</option>
       <option value="9">9시</option><option value="10">10시</option>
     </select>
-    <details style="margin-top:12px">
-      <summary style="font-size:13px;color:var(--sub);cursor:pointer">테스트 모드 (날씨 직접 정하기)</summary>
-      <label>체감온도</label>
-      <input type="range" id="temp" min="-10" max="35" value="12">
-      <label><input type="checkbox" id="rain"> 비 오는 날</label>
-    </details>
-    <div class="desc" id="status" style="margin-top:10px;font-size:12px;color:var(--sub)"></div>
+    <button class="iconbtn" id="locate">내 위치</button>
   </div>
+  <div class="meta" id="status"></div>
+  <details class="test">
+    <summary>테스트 모드 (날씨 직접 정하기)</summary>
+    <label>체감온도</label>
+    <input type="range" id="temp" min="-10" max="35" value="12">
+    <label><input type="checkbox" id="rain"> 비 오는 날</label>
+  </details>
 
-  <div class="card" id="outfit"></div>
-  <div class="tip" id="tip2" style="text-align:center"></div>
+  <div id="outfit"></div>
+  <div id="tip2"></div>
 
   <button class="btn" id="another">다른 조합 보기</button>
   <div class="note"><button class="linkbtn" id="resetFb">내 취향 초기화</button></div>
-  <div class="note">링크는 쇼핑몰 검색 결과로 이동합니다. 쇼핑몰 주소가 바뀌면 링크가 달라질 수 있어요.</div>
+  <div class="note">링크는 쇼핑몰 검색 결과로 이동합니다.<br>쇼핑몰 주소가 바뀌면 링크가 달라질 수 있어요.</div>
 </div>
 
 <script>
@@ -206,7 +236,7 @@ const OUTFITS = [
 const SHOPS = [
   { name:"무신사",  url:q => "https://www.musinsa.com/search/goods?keyword=" + q },
   { name:"29CM",    url:q => "https://search.29cm.co.kr/?keyword=" + q },
-  { name:"네이버쇼핑", url:q => "https://search.shopping.naver.com/search/all?query=" + q },
+  { name:"네이버", url:q => "https://search.shopping.naver.com/search/all?query=" + q },
 ];
 
 // ===== 3. 화면 =====
@@ -275,6 +305,15 @@ function weatherIcon(t, rain) {
   if (t >= 28) return "☀️"; if (t >= 20) return "🌤️"; if (t >= 10) return "⛅"; if (t >= 0) return "🌥️"; return "❄️";
 }
 
+
+// 아이템 이름에 색 이름이 들어 있으면 작은 색 칩을 보여줘요
+const COLORS = { "화이트":"#fff","아이보리":"#f4efe2","크림":"#f3ead2","베이지":"#d8c3a0","카멜":"#b98a4f","브라운":"#6f4a2f",
+  "스카이블루":"#8ec1e8","네이비":"#1f2a4a","차콜":"#3a3d42","그레이":"#9a9da1","블랙":"#111" };
+function swatch(name) {
+  const k = Object.keys(COLORS).find(c => name.includes(c));
+  return k ? `<i class="sw" style="background:${COLORS[k]}"></i>` : "";
+}
+
 function render() {
   const t = weather.temp, rain = weather.rain;
   const band = OUTFITS.find(b => t >= b.min);
@@ -291,7 +330,7 @@ function render() {
   const set = band.sets[cur][gender];
 
   $("wIcon").textContent = weatherIcon(t, rain);
-  $("wTemp").textContent = t + "℃";
+  $("wTemp").textContent = t + "°";
   let desc = band.label + (rain ? " · 비 예보" : "");
   if (weather.min !== null) {
     desc += " · 최저 " + weather.min + "° / 최고 " + weather.max + "°";
@@ -308,12 +347,12 @@ function render() {
   }
 
   $("outfit").innerHTML =
-    `<p class="headline">${band.label}엔 이렇게 입어요</p>
+    `<p class="headline">${band.label},<br>이렇게 입어요</p>
      <p class="tip">${band.tip}${rain ? " · 비 오니 젖어도 되는 신발로!" : ""}</p>` +
-    items.map(it => {
+    items.map((it, n) => {
       const q = encodeURIComponent(it.name);
-      const links = SHOPS.map(s => `<a href="${s.url(q)}" target="_blank" rel="noopener">${s.name}</a>`).join("");
-      return `<div class="item"><div class="part">${it.part}</div><div class="name">${it.name}</div><div class="links">${links}</div></div>`;
+      const links = SHOPS.map(s => `<a href="${s.url(q)}" target="_blank" rel="noopener">${s.name} ↗</a>`).join("");
+      return `<div class="item"><div class="no">${String(n + 1).padStart(2, "0")}</div><div class="body"><div class="part">${it.part}</div><div class="name">${swatch(it.name)}<span>${it.name}</span></div><div class="links">${links}</div></div></div>`;
     }).join("") +
     `<div class="fb">
        <button data-fb="1" class="${fb === 1 ? "on" : ""}">👍 마음에 들어요</button>
