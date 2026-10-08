@@ -55,6 +55,9 @@
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:22px 12px; }
   .tile .img { aspect-ratio:1; background:#f4f4f4; display:flex; align-items:center; justify-content:center; padding:14%; }
   .tile .img svg { width:100%; height:100%; }
+  .tile .img.ph { padding:0; overflow:hidden; background:#f4f4f4; }
+  .tile .img .photo { display:block; width:100%; height:100%; }
+  .tile .img img { width:100%; height:100%; object-fit:cover; display:block; mix-blend-mode:multiply; }
   .tile .part { font-size:11px; color:var(--sub); letter-spacing:0.1em; margin:10px 0 3px; }
   .tile .name { font-size:15px; font-weight:600; line-height:1.35; letter-spacing:-0.02em; }
 
@@ -112,7 +115,7 @@
 
   <button class="btn" id="another">다른 조합 보기</button>
   <div class="note"><button class="linkbtn" id="resetFb">내 취향 초기화</button></div>
-  <div class="note">이미지는 이해를 돕는 일러스트예요.<br>실제 옷의 모양과 색은 다를 수 있어요.</div>
+  <div class="note">사진을 누르면 상품 페이지로 이동해요.<br>상품 이미지 출처: 네이버 쇼핑 · 사진이 없는 옷은 일러스트로 보여요.</div>
 </div>
 
 <script>
@@ -293,6 +296,8 @@ function garmentSVG(name) {
 
 // ===== 3. 화면 =====
 let gender = "m", setIndex = 0, order = null;
+let IMAGES = {}; // images.json: 옷 이름별 실제 상품 사진 (없으면 일러스트로 대신 보여줘요)
+fetch("images.json").then(r => r.ok ? r.json() : {}).then(d => { IMAGES = d; render(); }).catch(() => {});
 const $ = id => document.getElementById(id);
 
 // ===== 취향 저장 (이 브라우저 안에 저장돼요) =====
@@ -393,9 +398,13 @@ function render() {
   $("outfit").innerHTML =
     `<p class="headline">${band.label},<br>이렇게 입어요</p>
      <p class="tip">${band.tip}${rain ? " · 비 오니 젖어도 되는 신발로!" : ""}</p>` +
-    `<div class="grid">` + items.map(it =>
-      `<div class="tile"><div class="img">${garmentSVG(it.name)}</div><div class="part">${it.part}</div><div class="name">${it.name}</div></div>`
-    ).join("") + `</div>` +
+    `<div class="grid">` + items.map(it => {
+      const p = IMAGES[gender + "|" + it.name];
+      const art = p
+        ? `<a class="photo" href="${p.link}" target="_blank" rel="noopener" title="${p.title}"><img src="${p.img}" alt="${it.name}" loading="lazy" referrerpolicy="no-referrer" data-name="${it.name}"></a>`
+        : garmentSVG(it.name);
+      return `<div class="tile"><div class="img${p ? " ph" : ""}">${art}</div><div class="part">${it.part}</div><div class="name">${it.name}</div></div>`;
+    }    ).join("") + `</div>` +
     `<div class="fb">
        <button data-fb="1" class="${fb === 1 ? "on" : ""}">👍 마음에 들어요</button>
        <button data-fb="-1" class="${fb === -1 ? "on bad" : ""}">👎 별로예요</button>
@@ -407,6 +416,12 @@ $("date").textContent = new Date().toLocaleDateString("ko-KR", { month:"long", d
 $("temp").addEventListener("input", () => { weather.temp = Number($("temp").value); setIndex = 0; order = null; render(); });
 $("rain").addEventListener("change", () => { weather.rain = $("rain").checked; render(); });
 $("another").addEventListener("click", () => { setIndex++; render(); });
+$("outfit").addEventListener("error", e => {
+  const img = e.target;
+  if (img.tagName !== "IMG") return;
+  const box = img.closest(".img");
+  box.classList.remove("ph"); box.innerHTML = garmentSVG(img.dataset.name);
+}, true);
 $("outfit").addEventListener("click", e => {
   const v = e.target.dataset.fb;
   if (!v) return;
