@@ -52,19 +52,14 @@
   #outfit { padding:34px 0 8px; }
   .headline { font-size:24px; line-height:1.3; font-weight:800; margin:0 0 6px; letter-spacing:-0.03em; }
   .tip { color:#666; font-size:14px; margin:0 0 26px; line-height:1.5; }
-  .item { display:flex; gap:16px; padding:18px 0; border-top:1px solid var(--line); }
-  .item:last-of-type { border-bottom:1px solid var(--line); }
-  .item .no { font-size:11px; font-weight:600; color:var(--sub); width:18px; padding-top:4px; letter-spacing:0.04em; }
-  .item .body { flex:1; }
-  .item .part { font-size:11px; color:var(--sub); letter-spacing:0.1em; margin-bottom:4px; }
-  .item .name { font-size:18px; font-weight:600; line-height:1.35; letter-spacing:-0.02em; display:flex; align-items:center; gap:8px; }
-  .sw { width:12px; height:12px; border-radius:50%; border:1px solid rgba(0,0,0,.18); flex:none; }
-  .links { margin-top:10px; display:flex; gap:16px; }
-  .links a { font-size:12px; color:var(--ink); text-decoration:underline; text-underline-offset:3px; text-decoration-color:#bbb; }
-  .links a:active { text-decoration-color:var(--ink); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:22px 12px; }
+  .tile .img { aspect-ratio:1; background:#f4f4f4; display:flex; align-items:center; justify-content:center; padding:14%; }
+  .tile .img svg { width:100%; height:100%; }
+  .tile .part { font-size:11px; color:var(--sub); letter-spacing:0.1em; margin:10px 0 3px; }
+  .tile .name { font-size:15px; font-weight:600; line-height:1.35; letter-spacing:-0.02em; }
 
   /* 피드백 / 버튼 */
-  .fb { display:flex; gap:8px; margin-top:22px; }
+  .fb { display:flex; gap:8px; margin-top:26px; }
   .fb button { flex:1; padding:13px 0; border-radius:2px; border:1px solid var(--ink); background:#fff; font-size:13px; font-weight:600; cursor:pointer; }
   .fb button.on { background:var(--ink); color:#fff; }
   .fbmsg { font-size:12px; color:#555; margin:12px 0 0; }
@@ -117,7 +112,7 @@
 
   <button class="btn" id="another">다른 조합 보기</button>
   <div class="note"><button class="linkbtn" id="resetFb">내 취향 초기화</button></div>
-  <div class="note">링크는 쇼핑몰 검색 결과로 이동합니다.<br>쇼핑몰 주소가 바뀌면 링크가 달라질 수 있어요.</div>
+  <div class="note">이미지는 이해를 돕는 일러스트예요.<br>실제 옷의 모양과 색은 다를 수 있어요.</div>
 </div>
 
 <script>
@@ -232,12 +227,69 @@ const OUTFITS = [
         w: { 아우터:"벨티드 롱패딩", 상의:"셔츠 + 기모 가디건", 하의:"기모 슬랙스", 신발:"롱 부츠" } } ] },
 ];
 
-// ===== 2. 쇼핑몰 검색 링크 =====
-const SHOPS = [
-  { name:"무신사",  url:q => "https://www.musinsa.com/search/goods?keyword=" + q },
-  { name:"29CM",    url:q => "https://search.29cm.co.kr/?keyword=" + q },
-  { name:"네이버", url:q => "https://search.shopping.naver.com/search/all?query=" + q },
+// ===== 2. 옷 그림 (이름을 보고 알맞은 모양·색으로 그려줘요) =====
+// 나중에 실제 상품 사진을 연결하게 되면 이 부분만 바꾸면 돼요.
+const COLORS = { "화이트":"#ffffff","아이보리":"#f4efe2","크림":"#f3ead2","베이지":"#d8c3a0","카멜":"#b98a4f","브라운":"#6f4a2f",
+  "스카이블루":"#8ec1e8","네이비":"#1f2a4a","차콜":"#3a3d42","그레이":"#9a9da1","블랙":"#161616" };
+
+// 이름에서 옷 종류 찾기 (위에 있는 규칙이 먼저 적용돼요)
+const KINDS = [
+  ["padding", /패딩/], ["coat", /코트/], ["jacket", /재킷|블레이저|블루종/],
+  ["dress", /원피스/], ["skirt", /스커트/], ["pants", /팬츠|슬랙스|치노|쇼츠/],
+  ["boot", /부츠/], ["shoe", /로퍼|슈즈|스니커즈|뮬|슬링백|샌들|더비/], ["umbrella", /우산/],
+  ["turtle", /터틀넥/], ["knit", /니트|가디건|히트텍|폴로|헨리넥/], ["tee", /티셔츠/], ["shirt", /셔츠|블라우스/], ["tee", /반팔|탑/],
 ];
+// 색 이름이 없을 때 쓰는 기본 색
+const DEFAULT_FILL = { padding:"#3b3f46", coat:"#8c8173", jacket:"#6b7078", dress:"#2f3340", skirt:"#4a4a4f", pants:"#43474e",
+  boot:"#2b2320", shoe:"#3a2c25", umbrella:"#1f2a4a", turtle:"#cbbfae", knit:"#cbbfae", shirt:"#f2f2f2", tee:"#e8e4dc" };
+
+function kindOf(name) { const k = KINDS.find(([, re]) => re.test(name)); return k ? k[0] : "tee"; }
+function colorOf(name, kind) {
+  let best = null, pos = 999;
+  for (const c in COLORS) { const i = name.indexOf(c); if (i >= 0 && i < pos) { pos = i; best = c; } }
+  return best ? COLORS[best] : DEFAULT_FILL[kind];
+}
+function isDark(hex) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 120;
+}
+
+function garmentSVG(name) {
+  const kind = kindOf(name), fill = colorOf(name, kind), short = /반팔/.test(name);
+  const line = isDark(fill) ? "rgba(255,255,255,.45)" : "rgba(0,0,0,.35)";
+  const body = {
+    teeS: "M30 20 L40 16 Q50 24 60 16 L70 20 L88 34 L79 46 L70 40 L70 84 L30 84 L30 40 L21 46 L12 34 Z",
+    longS: "M30 18 L40 14 Q50 22 60 14 L70 18 L90 66 L78 70 L68 40 L68 86 L32 86 L32 40 L22 70 L10 66 Z",
+    jacket: "M28 18 L42 12 L50 30 L58 12 L72 18 L92 70 L80 74 L70 44 L70 88 L30 88 L30 44 L20 74 L8 70 Z",
+    coat: "M28 14 L42 8 L50 28 L58 8 L72 14 L92 66 L80 70 L70 40 L70 96 L30 96 L30 40 L20 70 L8 66 Z",
+    pants: "M30 10 H70 L74 90 H54 L50 36 L46 90 H26 Z",
+    skirt: "M34 16 H66 L82 88 H18 Z",
+    dress: "M38 10 L44 14 H56 L62 10 L68 30 L62 46 L84 90 H16 L38 46 L32 30 Z",
+    shoe: "M10 62 Q12 44 26 42 L40 44 Q48 58 66 58 Q90 58 92 70 V76 H10 Z",
+    boot: "M34 14 H58 V50 Q62 58 82 62 Q92 66 92 74 V80 H30 Q26 80 26 74 Z",
+    umbrella: "M10 52 Q50 -4 90 52 Q80 44 70 52 Q60 44 50 52 Q40 44 30 52 Q20 44 10 52 Z",
+  };
+  const P = (d, extra = "") => `<path d="${d}" fill="${fill}" stroke="#111" stroke-width="1.6" stroke-linejoin="round" ${extra}/>`;
+  const L = (d) => `<path d="${d}" fill="none" stroke="${line}" stroke-width="1.4" stroke-linecap="round"/>`;
+  const sole = `<path d="M10 76 H92 V82 H10 Z" fill="#111"/>`;
+  let g = "";
+  switch (kind) {
+    case "padding": g = P(body.coat.replace(/96/g, "90")) + L("M30 38 H70 M30 52 H70 M30 66 H70 M30 80 H70") + L("M42 8 V28 M58 8 V28"); break;
+    case "coat": g = P(body.coat) + L("M42 8 L50 52 L58 8 M50 52 V96") + `<circle cx="46" cy="64" r="1.6" fill="${line}"/><circle cx="46" cy="78" r="1.6" fill="${line}"/>`; break;
+    case "jacket": g = P(body.jacket) + L("M42 12 L50 50 L58 12 M50 50 V88") + `<circle cx="46" cy="62" r="1.6" fill="${line}"/>`; break;
+    case "dress": g = P(body.dress) + L("M38 46 H62"); break;
+    case "skirt": g = P(body.skirt) + L("M34 24 H66 M44 24 L38 88 M56 24 L62 88"); break;
+    case "pants": g = P(body.pants) + L("M30 18 H70 M50 18 V36"); break;
+    case "boot": g = P(body.boot) + sole + L("M34 22 H58"); break;
+    case "shoe": g = P(body.shoe) + sole + L("M30 50 Q38 56 46 52"); break;
+    case "umbrella": g = P(body.umbrella) + `<path d="M50 52 V80 Q50 90 40 88" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"/>`; break;
+    case "turtle": g = P(short ? body.teeS : body.longS) + P("M39 8 H61 V18 Q50 24 39 18 Z") + L("M40 12 H60"); break;
+    case "knit": g = P(short ? body.teeS : body.longS) + L("M32 80 H68"); break;
+    case "shirt": g = P(short ? body.teeS : body.longS) + P("M40 14 L50 30 L38 26 Z") + P("M60 14 L50 30 L62 26 Z") + L("M50 30 V86"); break;
+    default: g = P(body.teeS);
+  }
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${name}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
 
 // ===== 3. 화면 =====
 let gender = "m", setIndex = 0, order = null;
@@ -306,14 +358,6 @@ function weatherIcon(t, rain) {
 }
 
 
-// 아이템 이름에 색 이름이 들어 있으면 작은 색 칩을 보여줘요
-const COLORS = { "화이트":"#fff","아이보리":"#f4efe2","크림":"#f3ead2","베이지":"#d8c3a0","카멜":"#b98a4f","브라운":"#6f4a2f",
-  "스카이블루":"#8ec1e8","네이비":"#1f2a4a","차콜":"#3a3d42","그레이":"#9a9da1","블랙":"#111" };
-function swatch(name) {
-  const k = Object.keys(COLORS).find(c => name.includes(c));
-  return k ? `<i class="sw" style="background:${COLORS[k]}"></i>` : "";
-}
-
 function render() {
   const t = weather.temp, rain = weather.rain;
   const band = OUTFITS.find(b => t >= b.min);
@@ -349,11 +393,9 @@ function render() {
   $("outfit").innerHTML =
     `<p class="headline">${band.label},<br>이렇게 입어요</p>
      <p class="tip">${band.tip}${rain ? " · 비 오니 젖어도 되는 신발로!" : ""}</p>` +
-    items.map((it, n) => {
-      const q = encodeURIComponent(it.name);
-      const links = SHOPS.map(s => `<a href="${s.url(q)}" target="_blank" rel="noopener">${s.name} ↗</a>`).join("");
-      return `<div class="item"><div class="no">${String(n + 1).padStart(2, "0")}</div><div class="body"><div class="part">${it.part}</div><div class="name">${swatch(it.name)}<span>${it.name}</span></div><div class="links">${links}</div></div></div>`;
-    }).join("") +
+    `<div class="grid">` + items.map(it =>
+      `<div class="tile"><div class="img">${garmentSVG(it.name)}</div><div class="part">${it.part}</div><div class="name">${it.name}</div></div>`
+    ).join("") + `</div>` +
     `<div class="fb">
        <button data-fb="1" class="${fb === 1 ? "on" : ""}">👍 마음에 들어요</button>
        <button data-fb="-1" class="${fb === -1 ? "on bad" : ""}">👎 별로예요</button>
