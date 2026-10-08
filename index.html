@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘의 출근룩</title>
+<style>
+  :root { --bg:#f5f5f3; --card:#fff; --text:#1c1c1c; --sub:#777; --accent:#2b4acb; --line:#e5e5e2; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,"Malgun Gothic",sans-serif; }
+  .wrap { max-width:480px; margin:0 auto; padding:20px 16px 48px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .date { color:var(--sub); font-size:14px; margin-bottom:16px; }
+  .card { background:var(--card); border-radius:16px; padding:18px; margin-bottom:14px; border:1px solid var(--line); }
+  .weather { display:flex; align-items:center; gap:14px; }
+  .weather .icon { font-size:44px; }
+  .weather .temp { font-size:32px; font-weight:700; }
+  .weather .desc { color:var(--sub); font-size:14px; }
+  .controls label { display:block; font-size:13px; color:var(--sub); margin:10px 0 4px; }
+  input[type=range] { width:100%; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .seg button { border:1px solid var(--line); background:#fff; padding:8px 14px; border-radius:20px; font-size:14px; cursor:pointer; }
+  .seg button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .headline { font-size:17px; font-weight:700; margin:0 0 4px; }
+  .tip { color:var(--sub); font-size:14px; margin:0 0 14px; }
+  .item { padding:12px 0; border-top:1px solid var(--line); }
+  .item:first-of-type { border-top:none; }
+  .item .part { font-size:12px; color:var(--sub); }
+  .item .name { font-size:16px; font-weight:600; margin:2px 0 8px; }
+  .links a { display:inline-block; font-size:13px; text-decoration:none; color:var(--accent); border:1px solid var(--accent); padding:5px 10px; border-radius:14px; margin-right:6px; }
+  .btn { width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:15px; cursor:pointer; }
+  .note { font-size:12px; color:var(--sub); text-align:center; margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>오늘의 출근룩</h1>
+  <div class="date" id="date"></div>
+
+  <div class="card weather">
+    <div class="icon" id="wIcon"></div>
+    <div>
+      <div class="temp" id="wTemp"></div>
+      <div class="desc" id="wDesc"></div>
+    </div>
+  </div>
+
+  <div class="card controls">
+    <div class="row seg" id="gender">
+      <button data-v="m" class="on">남성</button>
+      <button data-v="w">여성</button>
+    </div>
+    <label>체감온도 (테스트용 — 다음 단계에서 실제 날씨로 대체)</label>
+    <input type="range" id="temp" min="-10" max="35" value="12">
+    <label><input type="checkbox" id="rain"> 비 오는 날</label>
+  </div>
+
+  <div class="card" id="outfit"></div>
+
+  <button class="btn" id="another">다른 조합 보기</button>
+  <div class="note">링크는 쇼핑몰 검색 결과로 이동합니다. 쇼핑몰 주소가 바뀌면 링크가 달라질 수 있어요.</div>
+</div>
+
+<script>
+// ===== 1. 코디 데이터: 온도 구간별 조합 (m=남성, w=여성) =====
+// 각 구간에 조합을 여러 개 넣어두면 "다른 조합 보기"로 돌려볼 수 있어요.
+const OUTFITS = [
+  { min: 28, label: "무더운 날", tip: "통풍 잘 되는 소재로 시원하게",
+    sets: [
+      { m: { 상의:"반팔 오픈카라 셔츠", 하의:"린넨 블렌드 슬랙스", 신발:"로퍼" },
+        w: { 상의:"반팔 블라우스", 하의:"린넨 와이드 슬랙스", 신발:"뮬 로퍼" } },
+      { m: { 상의:"피케 반팔 티셔츠", 하의:"코튼 치노 팬츠", 신발:"더비 슈즈" },
+        w: { 상의:"반팔 니트 탑", 하의:"A라인 롱스커트", 신발:"플랫 슈즈" } } ] },
+  { min: 23, label: "더운 날", tip: "냉방 대비 얇은 겉옷 하나 챙기세요",
+    sets: [
+      { m: { 상의:"긴팔 옥스포드 셔츠", 하의:"코튼 슬랙스", 신발:"로퍼" },
+        w: { 상의:"얇은 셔츠 블라우스", 하의:"슬랙스", 신발:"로퍼" } },
+      { m: { 상의:"반팔 셔츠", 하의:"밝은 슬랙스", 신발:"더비 슈즈" },
+        w: { 상의:"반팔 니트", 하의:"미디 스커트", 신발:"슬링백" } } ] },
+  { min: 20, label: "선선한 날", tip: "얇은 가디건이나 셔츠 겹쳐 입기 좋아요",
+    sets: [
+      { m: { 상의:"셔츠 + 얇은 가디건", 하의:"슬랙스", 신발:"로퍼" },
+        w: { 상의:"블라우스 + 얇은 가디건", 하의:"슬랙스", 신발:"로퍼" } },
+      { m: { 상의:"긴팔 니트 폴로", 하의:"치노 팬츠", 신발:"스니커즈(깔끔한)" },
+        w: { 상의:"라운드 니트", 하의:"플리츠 스커트", 신발:"플랫 슈즈" } } ] },
+  { min: 17, label: "쌀쌀한 날", tip: "니트나 얇은 재킷이 딱 좋아요",
+    sets: [
+      { m: { 상의:"니트 + 셔츠", 하의:"울 슬랙스", 신발:"더비 슈즈" },
+        w: { 상의:"니트 + 셔츠", 하의:"울 슬랙스", 신발:"로퍼" } },
+      { m: { 상의:"셔츠 + 블레이저", 하의:"슬랙스", 신발:"로퍼" },
+        w: { 상의:"블라우스 + 블레이저", 하의:"슬랙스", 신발:"로퍼" } } ] },
+  { min: 12, label: "꽤 쌀쌀한 날", tip: "자켓이나 트렌치코트를 꺼낼 때예요",
+    sets: [
+      { m: { 아우터:"트렌치코트", 상의:"니트", 하의:"슬랙스", 신발:"더비 슈즈" },
+        w: { 아우터:"트렌치코트", 상의:"니트", 하의:"슬랙스", 신발:"로퍼" } },
+      { m: { 아우터:"싱글 재킷", 상의:"셔츠 + 니트 베스트", 하의:"울 슬랙스", 신발:"로퍼" },
+        w: { 아우터:"테일러드 재킷", 상의:"니트", 하의:"스커트", 신발:"앵클 부츠" } } ] },
+  { min: 9, label: "추운 날", tip: "도톰한 아우터가 필요해요",
+    sets: [
+      { m: { 아우터:"울 블렌드 코트", 상의:"니트", 하의:"슬랙스", 신발:"더비 슈즈" },
+        w: { 아우터:"핸드메이드 코트", 상의:"니트", 하의:"슬랙스", 신발:"앵클 부츠" } },
+      { m: { 아우터:"가죽 재킷", 상의:"터틀넥 니트", 하의:"슬랙스", 신발:"첼시 부츠" },
+        w: { 아우터:"울 재킷", 상의:"터틀넥 니트", 하의:"울 스커트", 신발:"부츠" } } ] },
+  { min: 5, label: "많이 추운 날", tip: "코트 + 니트 조합, 목도리도 추천",
+    sets: [
+      { m: { 아우터:"울 롱코트", 상의:"두꺼운 니트", 하의:"울 슬랙스", 신발:"첼시 부츠" },
+        w: { 아우터:"울 롱코트", 상의:"두꺼운 니트", 하의:"울 슬랙스", 신발:"롱 부츠" } },
+      { m: { 아우터:"싱글 코트", 상의:"가디건 + 셔츠", 하의:"슬랙스", 신발:"부츠" },
+        w: { 아우터:"더블 코트", 상의:"터틀넥", 하의:"스커트 + 기모 스타킹", 신발:"부츠" } } ] },
+  { min: -99, label: "한겨울", tip: "내복·목도리·장갑까지 챙기세요",
+    sets: [
+      { m: { 아우터:"롱패딩", 상의:"기모 니트", 하의:"기모 슬랙스", 신발:"방한 부츠" },
+        w: { 아우터:"롱패딩", 상의:"기모 니트", 하의:"기모 슬랙스", 신발:"방한 부츠" } },
+      { m: { 아우터:"두꺼운 울 코트", 상의:"히트텍 + 니트", 하의:"기모 슬랙스", 신발:"첼시 부츠" },
+        w: { 아우터:"두꺼운 울 코트", 상의:"히트텍 + 터틀넥", 하의:"기모 슬랙스", 신발:"방한 부츠" } } ] },
+];
+
+// ===== 2. 쇼핑몰 검색 링크 =====
+const SHOPS = [
+  { name:"무신사",  url:q => "https://www.musinsa.com/search/goods?keyword=" + q },
+  { name:"29CM",    url:q => "https://search.29cm.co.kr/?keyword=" + q },
+  { name:"네이버쇼핑", url:q => "https://search.shopping.naver.com/search/all?query=" + q },
+];
+
+// ===== 3. 화면 =====
+let gender = "m", setIndex = 0;
+const $ = id => document.getElementById(id);
+
+function weatherIcon(t, rain) {
+  if (rain) return "🌧️";
+  if (t >= 28) return "☀️"; if (t >= 20) return "🌤️"; if (t >= 10) return "⛅"; if (t >= 0) return "🌥️"; return "❄️";
+}
+
+function render() {
+  const t = Number($("temp").value), rain = $("rain").checked;
+  const band = OUTFITS.find(b => t >= b.min);
+  const set = band.sets[setIndex % band.sets.length][gender];
+
+  $("wIcon").textContent = weatherIcon(t, rain);
+  $("wTemp").textContent = t + "℃";
+  $("wDesc").textContent = band.label + (rain ? " · 비 예보" : "");
+
+  const items = Object.entries(set).map(([part, name]) => ({ part, name }));
+  if (rain) {
+    items.push({ part: "신발(비 오는 날)", name: "방수 로퍼 / 레인 부츠" });
+    items.push({ part: "소품", name: "장우산" });
+  }
+
+  $("outfit").innerHTML =
+    `<p class="headline">${band.label}엔 이렇게 입어요</p>
+     <p class="tip">${band.tip}${rain ? " · 비 오니 젖어도 되는 신발로!" : ""}</p>` +
+    items.map(it => {
+      const q = encodeURIComponent(it.name);
+      const links = SHOPS.map(s => `<a href="${s.url(q)}" target="_blank" rel="noopener">${s.name}</a>`).join("");
+      return `<div class="item"><div class="part">${it.part}</div><div class="name">${it.name}</div><div class="links">${links}</div></div>`;
+    }).join("");
+}
+
+$("date").textContent = new Date().toLocaleDateString("ko-KR", { month:"long", day:"numeric", weekday:"long" });
+$("temp").addEventListener("input", () => { setIndex = 0; render(); });
+$("rain").addEventListener("change", render);
+$("another").addEventListener("click", () => { setIndex++; render(); });
+$("gender").addEventListener("click", e => {
+  if (!e.target.dataset.v) return;
+  gender = e.target.dataset.v;
+  document.querySelectorAll("#gender button").forEach(b => b.classList.toggle("on", b === e.target));
+  render();
+});
+render();
+</script>
+</body>
+</html>
