@@ -50,12 +50,27 @@
       <button data-v="m" class="on">남성</button>
       <button data-v="w">여성</button>
     </div>
-    <label>체감온도 (테스트용 — 다음 단계에서 실제 날씨로 대체)</label>
-    <input type="range" id="temp" min="-10" max="35" value="12">
-    <label><input type="checkbox" id="rain"> 비 오는 날</label>
+    <label>지역</label>
+    <div class="row">
+      <select id="city"></select>
+      <button class="btn" id="locate" style="width:auto;padding:8px 14px">📍 내 위치</button>
+    </div>
+    <label>출근 시간</label>
+    <select id="hour">
+      <option value="7">7시</option><option value="8" selected>8시</option>
+      <option value="9">9시</option><option value="10">10시</option>
+    </select>
+    <details style="margin-top:12px">
+      <summary style="font-size:13px;color:var(--sub);cursor:pointer">테스트 모드 (날씨 직접 정하기)</summary>
+      <label>체감온도</label>
+      <input type="range" id="temp" min="-10" max="35" value="12">
+      <label><input type="checkbox" id="rain"> 비 오는 날</label>
+    </details>
+    <div class="desc" id="status" style="margin-top:10px;font-size:12px;color:var(--sub)"></div>
   </div>
 
   <div class="card" id="outfit"></div>
+  <div class="tip" id="tip2" style="text-align:center"></div>
 
   <button class="btn" id="another">다른 조합 보기</button>
   <div class="note">링크는 쇼핑몰 검색 결과로 이동합니다. 쇼핑몰 주소가 바뀌면 링크가 달라질 수 있어요.</div>
@@ -126,19 +141,71 @@ const SHOPS = [
 let gender = "m", setIndex = 0;
 const $ = id => document.getElementById(id);
 
+// ===== 실제 날씨 (Open-Meteo: 무료, API 키 필요 없음) =====
+const CITIES = {
+  "서울": [37.5665, 126.9780], "인천": [37.4563, 126.7052], "수원": [37.2636, 127.0286],
+  "대전": [36.3504, 127.3845], "대구": [35.8714, 128.6014], "부산": [35.1796, 129.0756],
+  "광주": [35.1595, 126.8526], "울산": [35.5384, 129.3114], "제주": [33.4996, 126.5312],
+};
+let weather = { temp: 12, rain: false, min: null, max: null, pop: null };
+
+async function loadWeather(lat, lon, label) {
+  $("status").textContent = "날씨 불러오는 중...";
+  try {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
+      "&hourly=apparent_temperature,precipitation_probability&daily=temperature_2m_max,temperature_2m_min" +
+      "&timezone=Asia%2FSeoul&forecast_days=1";
+    const d = await (await fetch(url)).json();
+    const h = Number($("hour").value);
+    const range = [h, h + 1, h + 2, 18]; // 출근 + 퇴근 무렵
+    const pop = Math.max(...range.map(i => d.hourly.precipitation_probability[i] || 0));
+    weather = {
+      temp: Math.round(d.hourly.apparent_temperature[h]),
+      rain: pop >= 50,
+      min: Math.round(d.daily.temperature_2m_min[0]),
+      max: Math.round(d.daily.temperature_2m_max[0]),
+      pop,
+    };
+    $("temp").value = weather.temp; $("rain").checked = weather.rain;
+    $("status").textContent = label + " 기준 · 출근 " + h + "시 체감온도";
+    setIndex = 0; render();
+  } catch (e) {
+    $("status").textContent = "날씨를 불러오지 못했어요. 인터넷 연결을 확인하거나 테스트 모드를 써주세요.";
+  }
+}
+
+function loadCity() { const c = $("city").value; loadWeather(...CITIES[c], c); }
+
+$("city").innerHTML = Object.keys(CITIES).map(c => `<option>${c}</option>`).join("");
+$("city").addEventListener("change", loadCity);
+$("hour").addEventListener("change", loadCity);
+$("locate").addEventListener("click", () => {
+  if (!navigator.geolocation) { $("status").textContent = "이 브라우저는 위치 기능을 지원하지 않아요."; return; }
+  navigator.geolocation.getCurrentPosition(
+    p => loadWeather(p.coords.latitude, p.coords.longitude, "내 위치"),
+    () => { $("status").textContent = "위치 권한이 없어서 지역 선택을 이용해 주세요."; });
+});
+
 function weatherIcon(t, rain) {
   if (rain) return "🌧️";
   if (t >= 28) return "☀️"; if (t >= 20) return "🌤️"; if (t >= 10) return "⛅"; if (t >= 0) return "🌥️"; return "❄️";
 }
 
 function render() {
-  const t = Number($("temp").value), rain = $("rain").checked;
+  const t = weather.temp, rain = weather.rain;
   const band = OUTFITS.find(b => t >= b.min);
   const set = band.sets[setIndex % band.sets.length][gender];
 
   $("wIcon").textContent = weatherIcon(t, rain);
   $("wTemp").textContent = t + "℃";
-  $("wDesc").textContent = band.label + (rain ? " · 비 예보" : "");
+  let desc = band.label + (rain ? " · 비 예보" : "");
+  if (weather.min !== null) {
+    desc += " · 최저 " + weather.min + "° / 최고 " + weather.max + "°";
+    if (weather.pop !== null) desc += " · 강수확률 " + weather.pop + "%";
+  }
+  $("wDesc").textContent = desc;
+  $("tip2").textContent = (weather.min !== null && weather.max - weather.min >= 10)
+    ? "일교차가 " + (weather.max - weather.min) + "°예요. 벗고 입기 편한 겉옷을 챙기세요." : "";
 
   const items = Object.entries(set).map(([part, name]) => ({ part, name }));
   if (rain) {
@@ -157,8 +224,8 @@ function render() {
 }
 
 $("date").textContent = new Date().toLocaleDateString("ko-KR", { month:"long", day:"numeric", weekday:"long" });
-$("temp").addEventListener("input", () => { setIndex = 0; render(); });
-$("rain").addEventListener("change", render);
+$("temp").addEventListener("input", () => { weather.temp = Number($("temp").value); setIndex = 0; render(); });
+$("rain").addEventListener("change", () => { weather.rain = $("rain").checked; render(); });
 $("another").addEventListener("click", () => { setIndex++; render(); });
 $("gender").addEventListener("click", e => {
   if (!e.target.dataset.v) return;
@@ -167,6 +234,7 @@ $("gender").addEventListener("click", e => {
   render();
 });
 render();
+loadCity(); // 처음 열면 서울 날씨부터 불러오기
 </script>
 </body>
 </html>
