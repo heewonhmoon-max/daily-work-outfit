@@ -29,6 +29,12 @@
   .item .name { font-size:16px; font-weight:600; margin:2px 0 8px; }
   .links a { display:inline-block; font-size:13px; text-decoration:none; color:var(--accent); border:1px solid var(--accent); padding:5px 10px; border-radius:14px; margin-right:6px; }
   .btn { width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:15px; cursor:pointer; }
+  .fb { display:flex; gap:8px; margin-top:14px; }
+  .fb button { flex:1; padding:10px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:14px; cursor:pointer; }
+  .fb button.on { background:#eaf0ff; border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .fb button.on.bad { background:#fdecec; border-color:#d33; color:#d33; }
+  .fbmsg { font-size:13px; color:var(--accent); margin:10px 0 0; }
+  .linkbtn { background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline; cursor:pointer; }
   .note { font-size:12px; color:var(--sub); text-align:center; margin-top:18px; }
 </style>
 </head>
@@ -73,6 +79,7 @@
   <div class="tip" id="tip2" style="text-align:center"></div>
 
   <button class="btn" id="another">다른 조합 보기</button>
+  <div class="note"><button class="linkbtn" id="resetFb">내 취향 초기화</button></div>
   <div class="note">링크는 쇼핑몰 검색 결과로 이동합니다. 쇼핑몰 주소가 바뀌면 링크가 달라질 수 있어요.</div>
 </div>
 
@@ -196,8 +203,20 @@ const SHOPS = [
 ];
 
 // ===== 3. 화면 =====
-let gender = "m", setIndex = 0;
+let gender = "m", setIndex = 0, order = null;
 const $ = id => document.getElementById(id);
+
+// ===== 취향 저장 (이 브라우저 안에 저장돼요) =====
+const FB_STORE = "outfitFeedback";
+function loadFb() { try { return JSON.parse(localStorage.getItem(FB_STORE)) || {}; } catch (e) { return {}; } }
+function saveFb(data) { try { localStorage.setItem(FB_STORE, JSON.stringify(data)); } catch (e) {} }
+let feedback = loadFb();
+const fbKey = (band, i) => gender + "-" + band.min + "-" + i;
+const getFb = key => feedback[key] || 0;
+function setFb(key, v) {
+  if (feedback[key] === v) delete feedback[key]; else feedback[key] = v; // 같은 버튼 다시 누르면 취소
+  saveFb(feedback);
+}
 
 // ===== 실제 날씨 (Open-Meteo: 무료, API 키 필요 없음) =====
 const CITIES = {
@@ -226,7 +245,7 @@ async function loadWeather(lat, lon, label) {
     };
     $("temp").value = weather.temp; $("rain").checked = weather.rain;
     $("status").textContent = label + " 기준 · 출근 " + h + "시 체감온도";
-    setIndex = 0; render();
+    setIndex = 0; order = null; render();
   } catch (e) {
     $("status").textContent = "날씨를 불러오지 못했어요. 인터넷 연결을 확인하거나 테스트 모드를 써주세요.";
   }
@@ -252,7 +271,17 @@ function weatherIcon(t, rain) {
 function render() {
   const t = weather.temp, rain = weather.rain;
   const band = OUTFITS.find(b => t >= b.min);
-  const set = band.sets[setIndex % band.sets.length][gender];
+  // 추천 순서: 좋아요 → 아직 평가 안 함 → 싫어요 (순서는 조합을 바꾸기 전까지 고정)
+  if (!order || order.bandMin !== band.min) {
+    const idx = band.sets.map((_, i) => i);
+    const score = i => getFb(fbKey(band, i));
+    idx.sort((a, b) => score(b) - score(a) || a - b);
+    order = { bandMin: band.min, idx };
+  }
+  const cur = order.idx[setIndex % order.idx.length];
+  const curKey = fbKey(band, cur);
+  const fb = getFb(curKey);
+  const set = band.sets[cur][gender];
 
   $("wIcon").textContent = weatherIcon(t, rain);
   $("wTemp").textContent = t + "℃";
@@ -278,16 +307,33 @@ function render() {
       const q = encodeURIComponent(it.name);
       const links = SHOPS.map(s => `<a href="${s.url(q)}" target="_blank" rel="noopener">${s.name}</a>`).join("");
       return `<div class="item"><div class="part">${it.part}</div><div class="name">${it.name}</div><div class="links">${links}</div></div>`;
-    }).join("");
+    }).join("") +
+    `<div class="fb">
+       <button data-fb="1" class="${fb === 1 ? "on" : ""}">👍 마음에 들어요</button>
+       <button data-fb="-1" class="${fb === -1 ? "on bad" : ""}">👎 별로예요</button>
+     </div>` +
+    (fb === 1 ? `<p class="fbmsg">좋아요! 비슷한 날엔 이 조합을 먼저 보여드릴게요.</p>` : "");
 }
 
 $("date").textContent = new Date().toLocaleDateString("ko-KR", { month:"long", day:"numeric", weekday:"long" });
-$("temp").addEventListener("input", () => { weather.temp = Number($("temp").value); setIndex = 0; render(); });
+$("temp").addEventListener("input", () => { weather.temp = Number($("temp").value); setIndex = 0; order = null; render(); });
 $("rain").addEventListener("change", () => { weather.rain = $("rain").checked; render(); });
 $("another").addEventListener("click", () => { setIndex++; render(); });
+$("outfit").addEventListener("click", e => {
+  const v = e.target.dataset.fb;
+  if (!v) return;
+  const band = OUTFITS.find(b => weather.temp >= b.min);
+  setFb(fbKey(band, order.idx[setIndex % order.idx.length]), Number(v));
+  if (v === "-1") setIndex++; // 싫어요 → 바로 다음 조합
+  render();
+});
+$("resetFb").addEventListener("click", () => {
+  if (!confirm("지금까지의 좋아요/싫어요를 모두 지울까요?")) return;
+  feedback = {}; saveFb(feedback); order = null; setIndex = 0; render();
+});
 $("gender").addEventListener("click", e => {
   if (!e.target.dataset.v) return;
-  gender = e.target.dataset.v;
+  gender = e.target.dataset.v; order = null; setIndex = 0;
   document.querySelectorAll("#gender button").forEach(b => b.classList.toggle("on", b === e.target));
   render();
 });
